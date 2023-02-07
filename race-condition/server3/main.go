@@ -24,7 +24,8 @@ func incr() {
 	})
 
 	// make a lock
-	resp := client.SetNX(lockKey, "server2", time.Second*5)
+	// add the value is the name of server
+	resp := client.SetNX(lockKey, "server3", time.Second*5)
 	lockSuccess, err := resp.Result()
 
 	if err != nil || !lockSuccess {
@@ -37,6 +38,12 @@ func incr() {
 	value, err := getResp.Int64()
 	if err == nil || err == redis.Nil {
 		// time.Sleep(time.Millisecond * 4800)
+		lockResp := client.Get(lockKey)
+		lockValue := lockResp.Val()
+		if lockValue != "server3" {
+			fmt.Println("lock is taken by other process.")
+			return
+		}
 		value++
 		resp := client.Set(counterKey, value, 0)
 		_, err := resp.Result()
